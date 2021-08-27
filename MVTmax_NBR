@@ -1,0 +1,76 @@
+function [Mmax,Vmax,Tmax]=MVTmax_NBR(bw,h,d,c1,...
+    Asinf,Assup,Asw,s,fc,fy,fyw)
+%Calculo do cortante, fletor e torcor resistentes para vigas retangulares
+%Concreto armado via NBR 6118/2014 isoladamente
+%Trelica de morsch p/ o corte e espacial p/ a torcao
+%Seção plana para flexão, sem interacao
+
+%c1 em mm (distância do eixo da armadura longitudinal à face)
+%Asinf, Assup e Asw em cm2
+%bw, h, d e s em cm
+%fc, fy e fyw em MPa
+%Serao utilizados valores "nominais" de resistencia
+%Serao utilizados valores unitários para os coeficientes de segurança
+%Esses valores devem ser coerentes com os preconizados nos ensaios
+%Internamente todas as unidades são trasnformadas para MN e m
+
+%% Transformação de unidades
+c1=c1/1000; %distancia da face ao eixo da armadura longitudinal em m
+Asinf=Asinf/10000;
+Assup=Assup/10000; %#ok<NASGU>
+Asw=Asw/10000;
+bw=bw/100;
+h=h/100;
+s=s/100;
+d=d/100;
+alpha=90; %angulo do estribo, geralmente 90 graus
+alpha=alpha*pi/180; %#ok<NASGU> %angulo do estribo em radianos
+
+%% Propriedades mecânicas
+
+%concreto
+if fc<=50
+    fctm=0.3*fc^(2/3);
+else
+    fctm=(2.12*log(1+0.11*fc));
+end
+
+fctkinf=0.7*fctm; %resistência à tração característica inferior
+fcd=fc;
+fctd=fctkinf; %#ok<NASGU>
+alphav2=1-fcd/250; %redução da resistência em estado biaxial de tensões
+
+%aco
+fyd=fy;
+fywd=fyw;
+
+
+%% Propriedades geométricas
+
+Ac=bw*h; %area da secao transversal m2
+Ic=bw*h^3/12; %#ok<NASGU> %momento de inercia da secao transversal m4
+u=2*bw+2*h; %perimetro da secao m
+
+heref=Ac/u; %espessura ficticia de referencia da secao m
+if heref>=2*c1
+    hemax=heref; 
+    hemin=2*c1;
+else
+    hemin=min([heref,bw-2*c1]);
+    hemax=hemin;
+end 
+
+Aswmin=0.2*fctm/fywd*bw*s; %m2 area de aco transversal minima
+if Asw<Aswmin
+    cont=questdlg('Asw < Aswmin -> Continuar?');
+    if strcmp(cont,'No')
+        error('Execucao interrompida. Verificar Asw.');
+    end
+end
+
+%% Valores maximos para fatores de escala
+Vmax=0.54*alphav2*fcd*bw*d*(cot(pi/2)+cot(pi/4))*sin(pi/4)^2;
+Tmax=0.5*alphav2*fcd*(bw-hemin)*(h-hemin)*hemax*sin(2*pi/4);
+Mmax=0.9*d*fyd*Asinf;
+
+end
