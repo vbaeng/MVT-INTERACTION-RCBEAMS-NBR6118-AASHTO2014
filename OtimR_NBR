@@ -1,0 +1,186 @@
+function [Rsol,Vsol,Tsol,thetasol,hesol,Msol,indrestri]=OtimR_NBR(bw,h,d,c1,...
+    Asinf,Assup,Asw,s,alpharaio,betaraio,fc,fy,fyw)
+%Calculo do cortante, fletor e torcor resistentes para vigas retangulares
+%Concreto armado via NBR 6118/2014 com otimizacao
+%Trelica de morsch p/ o corte e espacial p/ a torcao
+%Seção plana para flexão, além da interação entre esses
+
+%alpharaio (angulo da proporção entre V e T) em °
+%betaraio (angulo da proporção entre M e VT) em º
+%c1 em mm (distância do eixo da armadura longitudinal à face)
+%Asinf, Assup e Asw em cm2
+%bw, h, d e s em cm
+%fc, fy e fyw em MPa
+%Serao utilizados valores "nominais" de resistencia
+%Serao utilizados valores unitários para os coeficientes de segurança
+%Esses valores devem ser coerentes com os preconizados nos ensaios
+%Internamente todas as unidades são trasnformadas para MN e m
+
+%% Transformação de unidades
+alpharaio=alpharaio/180*pi; %transforma alpharaio em radianos
+betaraio=betaraio/180*pi; %transforma betaraio em radianos
+c1=c1/1000; %distancia da face ao eixo da armadura longitudinal em m
+Asinf=Asinf/10000;
+Assup=Assup/10000;
+Asw=Asw/10000;
+bw=bw/100;
+h=h/100;
+s=s/100;
+d=d/100;
+alpha=90; %angulo do estribo, geralmente 90 graus
+alpha=alpha*pi/180; %angulo do estribo em radianos
+
+%% Propriedades mecânicas
+
+%concreto
+if fc<=50
+    fctm=0.3*fc^(2/3);
+else
+    fctm=(2.12*log(1+0.11*fc));
+end
+
+fctkinf=0.7*fctm; %resistência à tração característica inferior
+fcd=fc;
+fctd=fctkinf;
+alphav2=1-fcd/250; %redução da resistência em estado biaxial de tensões
+
+%aco
+fyd=fy;
+fywd=fyw;
+
+
+%% Propriedades geométricas
+
+Ac=bw*h; %area da secao transversal m2
+Ic=bw*h^3/12; %#ok<NASGU> %momento de inercia da secao transversal m4
+u=2*bw+2*h; %perimetro da secao m
+
+heref=Ac/u; %espessura ficticia de referencia da secao m
+if heref>=2*c1
+    hemax=heref; 
+    hemin=2*c1;
+else
+    hemin=min([heref,bw-2*c1]);
+    hemax=hemin;
+end 
+
+Aswmin=0.2*fctm/fywd*bw*s; %m2 area de aco transversal minima
+if Asw<Aswmin
+    cont=questdlg('Asw < Aswmin -> Continuar?');
+    if strcmp(cont,'No')
+        error('Execucao interrompida. Verificar Asw.');
+    end
+end
+
+%% Corte, momento e torção simultaneos
+
+%FUNCAO OBJETIVO
+    function y=Raio(x)
+        %funcao a ser "minimizada" cujas componentes sao 
+        R=x(1); theta=x(2); he=x(3); %#ok<NASGU> %raio, angulo biela e espessura ficticia
+        y=-R;
+    end
+
+%Valores maximos para fatores de escala
+Vmax=0.54*alphav2*fcd*bw*d*(cot(pi/2)+cot(pi/4))*sin(pi/4)^2;
+Tmax=0.5*alphav2*fcd*(bw-hemin)*(h-hemin)*hemax*sin(2*pi/4);
+Mmax=0.9*d*fyd*Asinf;
+
+A=[];b=[];Aeq=[];beq=[]; %restricoes lineares
+lb=[0;pi/6;hemin]; up=[+inf;pi/4;hemax]; %restricoes nas variaveis
+Ri=0.01; thetai=pi/5; hei=0.01;
+x0=[Ri,thetai,hei]; %ponto inicial de otimizacao
+
+%FUNCAO DAS RESTRICOES NAO LINEARES
+    function [c,ceq]=Nlc(x)
+        %funcao das restricoes nao lineares
+        R=x(1); theta=x(2); he=x(3); %raio, angulo biela e espessura ficticia
+        VSd=R*cos(betaraio)*cos(alpharaio)*Vmax; %cortante solicitante escalado
+        TSd=R*cos(betaraio)*sin(alpharaio)*Tmax; %torcor solicitante escalado
+        MSd=R*sin(betaraio)*Mmax; %momento solicitante escalado
+        FRdinf=Asinf*fyd; %forca resistente inf de tracao longit em MN
+        FRdsup=Assup*fyd; %forca resistente sup de tracao longit em MN
+        %a=FRdinf/0.85/fcd/bw; %altura do bloco de compressao em m
+        %z=d-a/2; %braco de alavanca de flexao em m
+        z=min(0.9*d,0.8*h);
+        a=(d-z)*2;
+        
+        %CORTE
+        VRd2=0.54*alphav2*fcd*bw*d*...
+            (cot(alpha)+cot(theta))*sin(theta)^2; %resistencia da biela em MPa x m2 = MN
+        c(1)=VSd-VRd2; %VRd<VRd2
+        
+        Vc0=0.6*fctd*bw*d;
+        Vc1=max([min([Vc0*(VSd-VRd2)/(Vc0-VRd2),Vc0]),0]);
+        Vc=Vc1; %concreto no tirante considerando flexotracao com linha neutra na secao em MPa x m2 = MN
+        Vsw=fywd*Asw*0.9*d/s*sin(alpha)*(cot(alpha)+cot(theta)); %estribo no tirante em MPa x m2 = MN
+        VRd3=Vc+Vsw; %resistencia do tirante em MN
+        c(2)=VSd-VRd3; %VRd<VRd3
+        
+        c(3)=MSd/z + VSd*cot(theta)/2 - FRdinf; %VRd<VRd4
+        
+        %TORÇÃO
+        if heref>=2*c1
+            Ae=(bw-he)*(h-he); %area envolvida pelo fluxo de cisalhamento m2
+            ue=u-4*he; %perimetro da linha media da secao vazada em m
+        else
+            Ae=(bw-2*c1)*(h-2*c1);
+            ue=u-8*c1;
+        end   
+        
+        TRd2=0.5*alphav2*fcd*Ae*he*sin(2*theta); %torcor resistente  da biela em MNm
+        c(4)=TSd-TRd2; %TRd<TRd2
+        
+        TRd3=Ae*Asw*fywd/s*cot(theta); %torcor resistente da armadura transversal em MNm
+        c(5)=TSd-TRd3; %TRd<TRd3
+        
+        TRd4=(Assup+Asinf)*fyd*2*Ae*tan(theta)/ue; %torcor resistente da armadura longitudinal em MNm
+        c(6)=TSd-TRd4; %TRd<TRd4
+                
+        %INTERAÇÃO      
+        %biela comprimida
+        c(7)=VSd/VRd2+TSd/TRd2-1;
+        
+        %tirante tracionado
+        c(8)=max([(VSd-Vc),0])/fywd/0.9/d/cot(theta)+... 
+            TSd/fywd/Ae/cot(theta)-Asw/s;
+        
+        %banzo inferior
+        c(9)=cot(theta)*(TSd*ue/2/2/Ae + VSd/2) + MSd/z - FRdinf;
+        
+        %banzo superior (alivio da armadura de torcao)
+        c(10)=cot(theta)*(TSd*ue/2/2/Ae + VSd/2) - MSd/z - FRdsup;
+        
+        %banzo superior (compressao concomitante)
+        gamma=atan((TSd/Tmax)/(MSd/Mmax));
+        lambda=cos(gamma);
+        fcd1=0.85*fcd; %sem alphav2
+        fcd2=0.6*fcd; %sem alphav2
+        fcd12=lambda*fcd1+(1-lambda)*fcd2; %resistencia a compressao do concreto no modelo biela tirante em MPa
+
+        Talt=TSd/2/Ae/he; %cisalhamento devido a torcao MPa
+        Sigmacmed=MSd/z/bw/a; %tensao media de compressao devido a flexao MPa
+        Sigmacmax=Sigmacmed/2+sqrt((Sigmacmed/2)^2+Talt^2); %tensao de principal de compressao MPa
+        
+        c(11)=Sigmacmax-fcd12;
+        
+        
+        ceq=[]; %restricoes nao lineares de igualdade
+    end
+
+%OPCOES
+op=optimoptions('fmincon','Algorithm','sqp','Display','off','MaxFunctionEvaluations',1000);
+%CHAMADA DO OTIMIZADOR
+xsol=fmincon(@Raio,x0,A,b,Aeq,beq,lb,up,@Nlc,op);
+[rest,~]=Nlc(xsol);
+restri=rest([7:11]); %#ok<NBRAK>
+[~,indrestri]=max(restri);
+%OUTPUTS DA FUNCAO
+Rsol=xsol(1);
+Msol=Rsol*sin(betaraio)*Mmax; %momento solicitante em MNm
+Vsol=Rsol*cos(betaraio)*cos(alpharaio)*Vmax; %corte solicitante em MN
+Tsol=Rsol*cos(betaraio)*sin(alpharaio)*Tmax; %torcor solicitante em MNm
+thetasol=xsol(2); %angulo biela em radianos
+thetasol=thetasol*180/pi; %transforma theta em graus
+hesol=xsol(3); %espessura ficticia em m
+end
