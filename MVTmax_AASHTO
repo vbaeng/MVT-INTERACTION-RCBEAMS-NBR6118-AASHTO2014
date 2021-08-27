@@ -1,0 +1,947 @@
+%Pos processamento para o calculo do momento, cortante e torcor resistentes
+%Vigas retangulares de concreto armado via NBR 6118/2014 e AASHTO LRFD 2014
+%Superficies via otimizacao e interpolacao variando alpharaio e betaraio
+%Valores experimentais da literatura plotados com setas a partir da origem
+%Graficos projetados obliquamente no plano yz para melhor visualizacao
+
+clc
+clear
+
+load ('colormapNBR.mat');
+load ('colormapAASHTO.mat');
+
+%% Superficie para a vigas S1 a S4 e B5 a B7 do badawy
+ndivTV=15;
+ndivM=15;
+dalpharaio=90/ndivTV;
+dbetaraio=90/ndivM;
+V_Bd_NBR=zeros(ndivTV+1,ndivM+1);
+T_Bd_NBR=V_Bd_NBR;
+M_Bd_NBR=V_Bd_NBR;
+V_Bd_AASHTO=V_Bd_NBR;
+T_Bd_AASHTO=T_Bd_NBR;
+M_Bd_AASHTO=M_Bd_NBR;
+rest_Bd_NBR=zeros(ndivTV+1,ndivM+1);
+rest_Bd_AASHTO=zeros(ndivTV+1,ndivM+1);
+
+l=1;
+betaraio=0.001;
+while betaraio<=91
+    alpharaio=0.001;
+    k=1;
+    while alpharaio<=91
+        [~,V_Bd_NBR(k,l),T_Bd_NBR(k,l),~,~,M_Bd_NBR(k,l),rest_Bd_NBR(k,l)]=OtimR_NBR(15.2,30.5,26.7,38,5.671,5.671,0.792,10.2,alpharaio,betaraio,30,475,300);
+        [~,V_Bd_AASHTO(k,l),T_Bd_AASHTO(k,l),~,~,M_Bd_AASHTO(k,l),rest_Bd_AASHTO(k,l)]=OtimR_AASHTO(15.2,30.5,26.7,24.95,5.671,5.671,0.792,10.2,alpharaio,betaraio,30,475,300,19);
+        k=k+1;
+        alpharaio=alpharaio+dalpharaio;
+    end
+    l=l+1;
+    betaraio=betaraio+dbetaraio;
+end
+
+%% Superficie para as vigas M5 e M6 do mcmullen
+ndivTV=15;
+ndivM=15;
+dalpharaio=90/ndivTV;
+dbetaraio=90/ndivM;
+V_M5M6_NBR=zeros(ndivTV+1,ndivM+1);
+T_M5M6_NBR=V_M5M6_NBR;
+M_M5M6_NBR=V_M5M6_NBR;
+V_M5M6_AASHTO=V_M5M6_NBR;
+T_M5M6_AASHTO=T_M5M6_NBR;
+M_M5M6_AASHTO=M_M5M6_NBR;
+rest_M5M6_NBR=zeros(ndivTV+1,ndivM+1);
+rest_M5M6_AASHTO=zeros(ndivTV+1,ndivM+1);
+
+betaraio=0.001;
+l=1;
+while betaraio<=91
+    alpharaio=0.001;
+    k=1;
+    while alpharaio<=91
+        [~,V_M5M6_NBR(k,l),T_M5M6_NBR(k,l),~,~,M_M5M6_NBR(k,l),rest_M5M6_NBR(k,l)]=OtimR_NBR(15.24,30.81,26.03,44.75,5.73,1.43/323.4*365.4,1.43,8.255,alpharaio,betaraio,34.47,323.4,370.25);
+        [~,V_M5M6_AASHTO(k,l),T_M5M6_AASHTO(k,l),~,~,M_M5M6_AASHTO(k,l),rest_M5M6_AASHTO(k,l)]=OtimR_AASHTO(15.24,30.81,26.03,30.16,5.73,1.43/323.4*365.4,1.43,8.255,alpharaio,betaraio,34.47,323.4,370.25,19);
+        k=k+1;
+        alpharaio=alpharaio+dalpharaio;
+    end
+    l=l+1;
+    betaraio=betaraio+dbetaraio;
+end
+
+%% Superficie para as vigas M7 do mcmullen
+ndivTV=15;
+ndivM=15;
+dalpharaio=90/ndivTV;
+dbetaraio=90/ndivM;
+V_M7_NBR=zeros(ndivTV+1,ndivM+1);
+T_M7_NBR=V_M7_NBR;
+M_M7_NBR=V_M7_NBR;
+V_M7_AASHTO=V_M7_NBR;
+T_M7_AASHTO=T_M7_NBR;
+M_M7_AASHTO=M_M7_NBR;
+rest_M7_NBR=zeros(ndivTV+1,ndivM+1);
+rest_M7_AASHTO=zeros(ndivTV+1,ndivM+1);
+
+betaraio=0.001;
+l=1;
+while betaraio<=91
+    alpharaio=0.001;
+    k=1;
+    while alpharaio<=91
+        [~,V_M7_NBR(k,l),T_M7_NBR(k,l),~,~,M_M7_NBR(k,l),rest_M7_NBR(k,l)]=OtimR_NBR(15.24,30.81,25.72,47.63,10.13,1.43/302*365.4,1.43,12.7,alpharaio,betaraio,34.47,302.0,370.25);
+        [~,V_M7_AASHTO(k,l),T_M7_AASHTO(k,l),~,~,M_M7_AASHTO(k,l),rest_M7_AASHTO(k,l)]=OtimR_AASHTO(15.24,30.81,25.72,30.16,10.13,1.43/302*365.4,1.43,12.7,alpharaio,betaraio,34.47,302.0,370.25,19);
+        k=k+1;
+        alpharaio=alpharaio+dalpharaio;
+    end
+    l=l+1;
+    betaraio=betaraio+dbetaraio;
+end
+
+%% Plot S1 a S4 e B5 a B7  nbr
+f1=figure;
+hold on
+grid off
+haxis=gca;
+
+haxis.XRuler.FirstCrossoverValue  = 0;
+haxis.XRuler.SecondCrossoverValue = 0;
+haxis.YRuler.FirstCrossoverValue  = 0;
+haxis.YRuler.SecondCrossoverValue = 0;
+haxis.ZRuler.FirstCrossoverValue  = 0;
+haxis.ZRuler.SecondCrossoverValue = 0;
+xlab=xlabel('Mrd/Mmax');
+ylab=ylabel('Vrd/Vmax');
+zlab=zlabel('Trd/Tmax');
+xlab.Rotation=30;
+xlab.BackgroundColor=[0.8,0.8,0.8];
+xlab.Position=[0.800,-0.034,-0.120];
+ylab.Rotation=-5;
+ylab.BackgroundColor=[0.8,0.8,0.8];
+ylab.Position=[-0.150,1.053,-0.128];
+zlab.Rotation=90;
+zlab.BackgroundColor=[0.8,0.8,0.8];
+zlab.Position=[-0.18,0.091,1.215];
+xlim([0 1.5]);
+ylim([0 1.5]);
+zlim([0 1.5]);
+xticks(1);
+xticklabels([]);
+tx=text(0.727089688042732,-0.228341471747299,-0.024299246182473,'1');
+tx.EdgeColor='none';
+yticks(1);
+yticklabels([]);
+ty=text(0.074688706827267,1.075197487310891,0.120317723229524,'1');
+ty.EdgeColor='none';
+zticks(1);
+zticklabels([]);
+tz=text(0.276195185628161,0.00368598521116,1.088138980063659,'1');
+tz.EdgeColor='none';
+
+
+[Mmax,Vmax,Tmax]=MVTmax_NBR(15.2,30.5,26.7,38,5.671,5.671,0.792,10.2,30,475,300);
+mesh(M_Bd_NBR./Mmax,V_Bd_NBR./Vmax,T_Bd_NBR./Tmax,rest_Bd_NBR,'FaceColor','flat','FaceAlpha','0.4');
+colormap (haxis,NBR);
+caxis([1 5]);
+
+%valores experimentais
+Mexp_Bd=[   0.07682
+            0.00000
+            0.01881
+            0.05151
+            0.00000
+            0.00000
+            0.00000 ];
+        
+Vexp_Bd=[   0.0000001
+            0.00000
+            0.02313
+            0.05071
+            0.15120
+            0.09341
+            0.04893 ];
+        
+Texp_Bd=[   0.00000
+            0.01356
+            0.01242
+            0.01073
+            0.00000
+            0.00893
+            0.01165 ];
+
+x0=zeros(size(Mexp_Bd,1),1);
+y0=x0;
+z0=x0;
+
+keq_Bd_NBR=x0;
+leq_Bd_NBR=x0;
+
+M_Bd_NBR=M_Bd_NBR./Mmax;
+V_Bd_NBR=V_Bd_NBR./Vmax;
+T_Bd_NBR=T_Bd_NBR./Tmax;
+
+Mexp_Bd=Mexp_Bd./Mmax;
+Vexp_Bd=Vexp_Bd./Vmax;
+Texp_Bd=Texp_Bd./Tmax;
+
+Rexp_Bd=(Mexp_Bd.^2+Vexp_Bd.^2+Texp_Bd.^2).^0.5;
+Betaexp_Bd=abs(asin(Mexp_Bd./Rexp_Bd));
+Alphaexp_Bd=abs(atan(Texp_Bd./Vexp_Bd));
+Betaexp_Bd=Betaexp_Bd./pi.*180;
+Alphaexp_Bd=Alphaexp_Bd./pi.*180;
+
+R_Bd_NBR=(M_Bd_NBR.^2+V_Bd_NBR.^2+T_Bd_NBR.^2).^0.5;
+Beta_Bd_NBR=abs(asin(M_Bd_NBR./R_Bd_NBR));
+Alpha_Bd_NBR=abs(atan(T_Bd_NBR./V_Bd_NBR));
+Beta_Bd_NBR=Beta_Bd_NBR./pi.*180;
+Alpha_Bd_NBR=Alpha_Bd_NBR./pi.*180;
+
+for i=1:size(Mexp_Bd,1)
+    [~, keq_Bd_NBR(i)] = min(abs(Alpha_Bd_NBR(:,1)-Alphaexp_Bd(i)));
+    [~, leq_Bd_NBR(i)] = min(abs(Beta_Bd_NBR(keq_Bd_NBR(i),:)-Betaexp_Bd(i)));
+end
+
+idxeq_Bd_NBR=sub2ind([ndivM+1,ndivTV+1],keq_Bd_NBR,leq_Bd_NBR);
+
+Meq_Bd_NBR=M_Bd_NBR(idxeq_Bd_NBR);
+Veq_Bd_NBR=V_Bd_NBR(idxeq_Bd_NBR);
+Teq_Bd_NBR=T_Bd_NBR(idxeq_Bd_NBR);
+
+Mplotmatrix=[x0';Meq_Bd_NBR';Mexp_Bd'];
+Vplotmatrix=[y0';Veq_Bd_NBR';Vexp_Bd'];
+Tplotmatrix=[z0';Teq_Bd_NBR';Texp_Bd'];
+
+plot3(Mplotmatrix,Vplotmatrix,Tplotmatrix,'--ok');
+
+annotation(f1,'textarrow',[0.616071428571429 0.578571428571428],...
+    [0.365666666666667 0.314285714285714],'String',{'S1'});
+annotation(f1,'textarrow',[0.441071428571429 0.398214285714286],...
+    [0.680952380952381 0.633333333333334],'String',{'S2'});
+annotation(f1,'textarrow',[0.501785714285714 0.458928571428571],...
+    [0.633333333333334 0.585714285714287],'String',{'S3'});
+annotation(f1,'textarrow',[0.566071428571429 0.516071428571428],...
+    [0.561904761904762 0.519047619047621],'String',{'S4'});
+annotation(f1,'textarrow',[0.142857142857143 0.164285714285712],...
+    [0.304761904761905 0.2404761904762],'String',{'B5'});
+annotation(f1,'textarrow',[0.239285714285714 0.294642857142856],...
+    [0.542857142857143 0.492857142857146],'String',{'B6'});
+annotation(f1,'textarrow',[0.296428571428571 0.339285714285713],...
+    [0.619047619047619 0.576190476190479],'String',{'B7'});
+
+title('Mrd x Vrd x Trd segundo NBR para Vigas S1 a S4 e B5 a B7')
+
+view(115,15)
+hold off
+print('01S1S7NBR','-dpng');
+savefig('01S1S7NBR');
+
+%% Plot S1 a S4 e B5 a B7 aashto
+f2=figure;
+hold on
+grid off
+haxis=gca;
+
+haxis.XRuler.FirstCrossoverValue  = 0;
+haxis.XRuler.SecondCrossoverValue = 0;
+haxis.YRuler.FirstCrossoverValue  = 0;
+haxis.YRuler.SecondCrossoverValue = 0;
+haxis.ZRuler.FirstCrossoverValue  = 0;
+haxis.ZRuler.SecondCrossoverValue = 0;
+xlab=xlabel('Mn/Mmax');
+ylab=ylabel('Vn/Vmax');
+zlab=zlabel('Tn/Tmax');
+xlab.Rotation=30;
+xlab.BackgroundColor=[0.8,0.8,0.8];
+xlab.Position=[0.800,-0.034,-0.120];
+ylab.Rotation=-5;
+ylab.BackgroundColor=[0.8,0.8,0.8];
+ylab.Position=[-0.150,1.053,-0.128];
+zlab.Rotation=90;
+zlab.BackgroundColor=[0.8,0.8,0.8];
+zlab.Position=[-0.18,0.091,1.215];
+xlim([0 1.5]);
+ylim([0 1.5]);
+zlim([0 1.5]);
+xticks(1);
+xticklabels([]);
+tx=text(0.727089688042732,-0.228341471747299,-0.024299246182473,'1');
+tx.EdgeColor='none';
+yticks(1);
+yticklabels([]);
+ty=text(0.074688706827267,1.075197487310891,0.120317723229524,'1');
+ty.EdgeColor='none';
+zticks(1);
+zticklabels([]);
+tz=text(0.276195185628161,0.00368598521116,1.088138980063659,'1');
+tz.EdgeColor='none';
+
+
+[Mmax,Vmax,Tmax]=MVTmax_AASHTO(15.2,30.5,26.7,24.95,5.671,5.671,0.792,10.2,30,475,300,19);
+mesh(M_Bd_AASHTO./Mmax,V_Bd_AASHTO./Vmax,T_Bd_AASHTO./Tmax,rest_Bd_AASHTO,'FaceColor','flat','FaceAlpha','0.4');
+colormap (haxis,AASHTO);
+caxis([1 4]);
+
+%valores experimentais
+Mexp_Bd=[   0.07682
+            0.00000
+            0.01881
+            0.05151
+            0.00000
+            0.00000
+            0.00000 ];
+        
+Vexp_Bd=[   0.0000001
+            0.00000
+            0.02313
+            0.05071
+            0.15120
+            0.09341
+            0.04893 ];
+        
+Texp_Bd=[   0.00000
+            0.01356
+            0.01242
+            0.01073
+            0.00000
+            0.00893
+            0.01165 ];
+
+x0=zeros(size(Mexp_Bd,1),1);
+y0=x0;
+z0=x0;
+
+keq_Bd_AASHTO=x0;
+leq_Bd_AASHTO=x0;
+
+M_Bd_AASHTO=M_Bd_AASHTO./Mmax;
+V_Bd_AASHTO=V_Bd_AASHTO./Vmax;
+T_Bd_AASHTO=T_Bd_AASHTO./Tmax;
+
+Mexp_Bd=Mexp_Bd./Mmax;
+Vexp_Bd=Vexp_Bd./Vmax;
+Texp_Bd=Texp_Bd./Tmax;
+
+Rexp_Bd=(Mexp_Bd.^2+Vexp_Bd.^2+Texp_Bd.^2).^0.5;
+Betaexp_Bd=abs(asin(Mexp_Bd./Rexp_Bd));
+Alphaexp_Bd=abs(atan(Texp_Bd./Vexp_Bd));
+Betaexp_Bd=Betaexp_Bd./pi.*180;
+Alphaexp_Bd=Alphaexp_Bd./pi.*180;
+
+R_Bd_AASHTO=(M_Bd_AASHTO.^2+V_Bd_AASHTO.^2+T_Bd_AASHTO.^2).^0.5;
+Beta_Bd_AASHTO=abs(asin(M_Bd_AASHTO./R_Bd_AASHTO));
+Alpha_Bd_AASHTO=abs(atan(T_Bd_AASHTO./V_Bd_AASHTO));
+Beta_Bd_AASHTO=Beta_Bd_AASHTO./pi.*180;
+Alpha_Bd_AASHTO=Alpha_Bd_AASHTO./pi.*180;
+
+for i=1:size(Mexp_Bd,1)
+    [~, keq_Bd_AASHTO(i)] = min(abs(Alpha_Bd_AASHTO(:,1)-Alphaexp_Bd(i)));
+    [~, leq_Bd_AASHTO(i)] = min(abs(Beta_Bd_AASHTO(keq_Bd_AASHTO(i),:)-Betaexp_Bd(i)));
+end
+
+idxeq_Bd_AASHTO=sub2ind([ndivM+1,ndivTV+1],keq_Bd_AASHTO,leq_Bd_AASHTO);
+
+Meq_Bd_AASHTO=M_Bd_AASHTO(idxeq_Bd_AASHTO);
+Veq_Bd_AASHTO=V_Bd_AASHTO(idxeq_Bd_AASHTO);
+Teq_Bd_AASHTO=T_Bd_AASHTO(idxeq_Bd_AASHTO);
+
+Mplotmatrix=[x0';Meq_Bd_AASHTO';Mexp_Bd'];
+Vplotmatrix=[y0';Veq_Bd_AASHTO';Vexp_Bd'];
+Tplotmatrix=[z0';Teq_Bd_AASHTO';Texp_Bd'];
+
+plot3(Mplotmatrix,Vplotmatrix,Tplotmatrix,'--ok');
+
+annotation(f2,'textarrow',[0.616071428571429 0.578571428571428],...
+    [0.365666666666667 0.314285714285714],'String',{'S1'});
+annotation(f2,'textarrow',[0.441071428571429 0.398214285714286],...
+    [0.680952380952381 0.633333333333334],'String',{'S2'});
+annotation(f2,'textarrow',[0.501785714285714 0.458928571428571],...
+    [0.633333333333334 0.585714285714287],'String',{'S3'});
+annotation(f2,'textarrow',[0.566071428571429 0.516071428571428],...
+    [0.561904761904762 0.519047619047621],'String',{'S4'});
+annotation(f2,'textarrow',[0.142857142857143 0.164285714285712],...
+    [0.304761904761905 0.2404761904762],'String',{'B5'});
+annotation(f2,'textarrow',[0.239285714285714 0.294642857142856],...
+    [0.542857142857143 0.492857142857146],'String',{'B6'});
+annotation(f2,'textarrow',[0.296428571428571 0.339285714285713],...
+    [0.619047619047619 0.576190476190479],'String',{'B7'});
+
+title('Mn x Vn x Tn segundo AASHTO para Vigas S1 a S4 e B5 a B7')
+
+view(115,15)
+hold off
+print('02S1S7AASHTO','-dpng');
+savefig('02S1S7AASHTO');
+
+%% Plot M5M6 nbr
+f3=figure;
+hold on
+grid off
+haxis=gca;
+
+haxis.XRuler.FirstCrossoverValue  = 0;
+haxis.XRuler.SecondCrossoverValue = 0;
+haxis.YRuler.FirstCrossoverValue  = 0;
+haxis.YRuler.SecondCrossoverValue = 0;
+haxis.ZRuler.FirstCrossoverValue  = 0;
+haxis.ZRuler.SecondCrossoverValue = 0;
+xlab=xlabel('Mrd/Mmax');
+ylab=ylabel('Vrd/Vmax');
+zlab=zlabel('Trd/Tmax');
+xlab.Rotation=30;
+xlab.BackgroundColor=[0.8,0.8,0.8];
+xlab.Position=[0.862127279138949,-0.028937938252358,-0.167510028759338];
+ylab.Rotation=-30;
+ylab.BackgroundColor=[0.8,0.8,0.8];
+ylab.Position=[-0.00326087988055,0.906260859249883,-0.128000014588068];
+zlab.Rotation=90;
+zlab.BackgroundColor=[0.8,0.8,0.8];
+zlab.Position=[-0.182702692680152,0.063840785580712,1.236115584023608];
+xlim([0 1.5]);
+ylim([0 1.5]);
+zlim([0 1.5]);
+xticks(1);
+xticklabels([]);
+tx=text(0.88090688984391,-0.270176443859167,-0.103482631069632,'1');
+tx.EdgeColor='none';
+yticks(1);
+yticklabels([]);
+ty=text(-0.010865059625264,1.071165459988791,0.183664424051813,'1');
+ty.EdgeColor='none';
+zticks(1);
+zticklabels([]);
+tz=text(0.144818487196108,-0.021712452351331,1.198995708702512,'1');
+tz.EdgeColor='none';
+
+bwexp= [15.88
+        16.21
+        15.24
+        15.88
+        15.88
+        15.09
+        15.88
+        16.21];
+
+fcexp= [39.37
+        43.92
+        41.78
+        39.99
+        40.40
+        40.89
+        39.30
+        39.44];
+
+Mmaxexp=zeros(8,1);
+Vmaxexp=Mmaxexp;
+Tmaxexp=Mmaxexp;    
+for i=1:8
+    [Mmaxexp(i),Vmaxexp(i),Tmaxexp(i)]=MVTmax_NBR(bwexp(i),30.81,26.03,44.75,5.73,1.43/323.4*365.4,1.43,8.255,fcexp(i),323.4,370.25);
+end
+
+[Mmax,Vmax,Tmax]=MVTmax_NBR(15.24,30.81,26.03,44.75,5.73,1.43/323.4*365.4,1.43,8.255,34.47,323.4,370.25);
+mesh(M_M5M6_NBR./Mmax,V_M5M6_NBR./Vmax,T_M5M6_NBR./Tmax,rest_M5M6_NBR,'FaceColor','flat','FaceAlpha','0.4');
+colormap (haxis,NBR);
+caxis([1 5]);
+
+%valores experimentais
+Mexp_M5M6=[ 0.007343978
+            0.016156752
+            0.03140963
+            0.043950885
+            0.007343978
+            0.016834658
+            0.02982785
+            0.048244288 ];      
+        
+Vexp_M5M6=[ 0.003380632
+            0.008407098
+            0.017214534
+            0.024509582
+            0.008051242
+            0.018993814
+            0.034117694
+            0.055380090 ];
+        
+Texp_M5M6=[ 0.014461988
+            0.015930783
+            0.014687956
+            0.011185444
+            0.014574972
+            0.016382721
+            0.014913925
+            0.012089318 ];
+        
+        
+x0=zeros(size(Mexp_M5M6,1),1);
+y0=x0;
+z0=x0;
+
+keq_M5M6_NBR=x0;
+leq_M5M6_NBR=x0;
+
+M_M5M6_NBR=M_M5M6_NBR./Mmax;
+V_M5M6_NBR=V_M5M6_NBR./Vmax;
+T_M5M6_NBR=T_M5M6_NBR./Tmax;
+
+Mexp_M5M6=Mexp_M5M6./Mmaxexp;
+Vexp_M5M6=Vexp_M5M6./Vmaxexp;
+Texp_M5M6=Texp_M5M6./Tmaxexp;
+
+Rexp_M5M6=(Mexp_M5M6.^2+Vexp_M5M6.^2+Texp_M5M6.^2).^0.5;
+Betaexp_M5M6=abs(asin(Mexp_M5M6./Rexp_M5M6));
+Alphaexp_M5M6=abs(atan(Texp_M5M6./Vexp_M5M6));
+Betaexp_M5M6=Betaexp_M5M6./pi.*180;
+Alphaexp_M5M6=Alphaexp_M5M6./pi.*180;
+
+R_M5M6_NBR=(M_M5M6_NBR.^2+V_M5M6_NBR.^2+T_M5M6_NBR.^2).^0.5;
+Beta_M5M6_NBR=abs(asin(M_M5M6_NBR./R_M5M6_NBR));
+Alpha_M5M6_NBR=abs(atan(T_M5M6_NBR./V_M5M6_NBR));
+Beta_M5M6_NBR=Beta_M5M6_NBR./pi.*180;
+Alpha_M5M6_NBR=Alpha_M5M6_NBR./pi.*180;
+
+for i=1:size(Mexp_M5M6,1)
+    [~, keq_M5M6_NBR(i)] = min(abs(Alpha_M5M6_NBR(:,1)-Alphaexp_M5M6(i)));
+    [~, leq_M5M6_NBR(i)] = min(abs(Beta_M5M6_NBR(keq_M5M6_NBR(i),:)-Betaexp_M5M6(i)));
+end
+
+idxeq_M5M6_NBR=sub2ind([ndivM+1,ndivTV+1],keq_M5M6_NBR,leq_M5M6_NBR);
+
+Meq_M5M6_NBR=M_M5M6_NBR(idxeq_M5M6_NBR);
+Veq_M5M6_NBR=V_M5M6_NBR(idxeq_M5M6_NBR);
+Teq_M5M6_NBR=T_M5M6_NBR(idxeq_M5M6_NBR);
+
+Mplotmatrix=[x0';Meq_M5M6_NBR';Mexp_M5M6'];
+Vplotmatrix=[y0';Veq_M5M6_NBR';Vexp_M5M6'];
+Tplotmatrix=[z0';Teq_M5M6_NBR';Texp_M5M6'];
+
+plot3(Mplotmatrix,Vplotmatrix,Tplotmatrix,'--ok');
+
+annotation(f3,'textarrow',[0.55 0.499999999999999],...
+    [0.683333333333333 0.690476190476191],'String',{'M5/6-1'});
+annotation(f3,'textarrow',[0.408928571428571 0.410714285714286],...
+    [0.754761904761905 0.685714285714286],'String',{'M5/6-2'});
+annotation(f3,'textarrow',[0.310714285714286 0.330357142857143],...
+    [0.678571428571429 0.621428571428571],'String',{'M5/6-3'});
+annotation(f3,'textarrow',[0.233928571428571 0.258928571428571],...
+    [0.580952380952381 0.519047619047619],'String',{'M5/6-4'});
+
+title('Mrd x Vrd x Trd segundo NBR para Vigas M5 e M6')
+
+view(135,45)
+hold off
+print('03M5M6NBR','-dpng');
+savefig('03M5M6NBR');
+
+%% Plot M5M6 aashto
+f4=figure;
+hold on
+grid off
+haxis=gca;
+
+haxis.XRuler.FirstCrossoverValue  = 0;
+haxis.XRuler.SecondCrossoverValue = 0;
+haxis.YRuler.FirstCrossoverValue  = 0;
+haxis.YRuler.SecondCrossoverValue = 0;
+haxis.ZRuler.FirstCrossoverValue  = 0;
+haxis.ZRuler.SecondCrossoverValue = 0;
+xlab=xlabel('Mn/Mmax');
+ylab=ylabel('Vn/Vmax');
+zlab=zlabel('Tn/Tmax');
+xlab.Rotation=30;
+xlab.BackgroundColor=[0.8,0.8,0.8];
+xlab.Position=[0.862127279138949,-0.028937938252358,-0.167510028759338];
+ylab.Rotation=-30;
+ylab.BackgroundColor=[0.8,0.8,0.8];
+ylab.Position=[-0.00326087988055,0.906260859249883,-0.128000014588068];
+zlab.Rotation=90;
+zlab.BackgroundColor=[0.8,0.8,0.8];
+zlab.Position=[-0.182702692680152,0.063840785580712,1.236115584023608];
+xlim([0 1.5]);
+ylim([0 1.5]);
+zlim([0 1.5]);
+xticks(1);
+xticklabels([]);
+tx=text(0.88090688984391,-0.270176443859167,-0.103482631069632,'1');
+tx.EdgeColor='none';
+yticks(1);
+yticklabels([]);
+ty=text(-0.010865059625264,1.071165459988791,0.183664424051813,'1');
+ty.EdgeColor='none';
+zticks(1);
+zticklabels([]);
+tz=text(0.144818487196108,-0.021712452351331,1.198995708702512,'1');
+tz.EdgeColor='none';
+
+Mmaxexp=zeros(8,1);
+Vmaxexp=Mmaxexp;
+Tmaxexp=Mmaxexp;
+for i=1:8
+    [Mmaxexp(i),Vmaxexp(i),Tmaxexp(i)]=MVTmax_AASHTO(bwexp(i),30.81,26.03,30.16,5.73,1.43/323.4*365.4,1.43,8.255,fcexp(i),323.4,370.25,19);
+end
+
+[Mmax,Vmax,Tmax]=MVTmax_AASHTO(15.24,30.81,26.03,30.16,5.73,1.43/323.4*365.4,1.43,8.255,34.47,323.4,370.25,19);
+mesh(M_M5M6_AASHTO./Mmax,V_M5M6_AASHTO./Vmax,T_M5M6_AASHTO./Tmax,rest_M5M6_AASHTO,'FaceColor','flat','FaceAlpha','0.4');
+colormap (haxis,AASHTO);
+caxis([1 4]);
+
+%valores experimentais
+Mexp_M5M6=[ 0.007343978
+            0.016156752
+            0.03140963
+            0.043950885
+            0.007343978
+            0.016834658
+            0.02982785
+            0.048244288 ];
+               
+Vexp_M5M6=[ 0.003380632
+            0.008407098
+            0.017214534
+            0.024509582
+            0.008051242
+            0.018993814
+            0.034117694
+            0.055380090 ];
+        
+Texp_M5M6=[ 0.014461988
+            0.015930783
+            0.014687956
+            0.011185444
+            0.014574972
+            0.016382721
+            0.014913925
+            0.012089318 ];        
+        
+x0=zeros(size(Mexp_M5M6,1),1);
+y0=x0;
+z0=x0;
+
+keq_M5M6_AASHTO=x0;
+leq_M5M6_AASHTO=x0;
+
+M_M5M6_AASHTO=M_M5M6_AASHTO./Mmax;
+V_M5M6_AASHTO=V_M5M6_AASHTO./Vmax;
+T_M5M6_AASHTO=T_M5M6_AASHTO./Tmax;
+
+Mexp_M5M6=Mexp_M5M6./Mmaxexp;
+Vexp_M5M6=Vexp_M5M6./Vmaxexp;
+Texp_M5M6=Texp_M5M6./Tmaxexp;
+
+Rexp_M5M6=(Mexp_M5M6.^2+Vexp_M5M6.^2+Texp_M5M6.^2).^0.5;
+Betaexp_M5M6=abs(asin(Mexp_M5M6./Rexp_M5M6));
+Alphaexp_M5M6=abs(atan(Texp_M5M6./Vexp_M5M6));
+Betaexp_M5M6=Betaexp_M5M6./pi.*180;
+Alphaexp_M5M6=Alphaexp_M5M6./pi.*180;
+
+R_M5M6_AASHTO=(M_M5M6_AASHTO.^2+V_M5M6_AASHTO.^2+T_M5M6_AASHTO.^2).^0.5;
+Beta_M5M6_AASHTO=abs(asin(M_M5M6_AASHTO./R_M5M6_AASHTO));
+Alpha_M5M6_AASHTO=abs(atan(T_M5M6_AASHTO./V_M5M6_AASHTO));
+Beta_M5M6_AASHTO=Beta_M5M6_AASHTO./pi.*180;
+Alpha_M5M6_AASHTO=Alpha_M5M6_AASHTO./pi.*180;
+
+for i=1:size(Mexp_M5M6,1)
+    [~, keq_M5M6_AASHTO(i)] = min(abs(Alpha_M5M6_AASHTO(:,1)-Alphaexp_M5M6(i)));
+    [~, leq_M5M6_AASHTO(i)] = min(abs(Beta_M5M6_AASHTO(keq_M5M6_AASHTO(i),:)-Betaexp_M5M6(i)));
+end
+
+idxeq_M5M6_AASHTO=sub2ind([ndivM+1,ndivTV+1],keq_M5M6_AASHTO,leq_M5M6_AASHTO);
+
+Meq_M5M6_AASHTO=M_M5M6_AASHTO(idxeq_M5M6_AASHTO);
+Veq_M5M6_AASHTO=V_M5M6_AASHTO(idxeq_M5M6_AASHTO);
+Teq_M5M6_AASHTO=T_M5M6_AASHTO(idxeq_M5M6_AASHTO);
+
+Mplotmatrix=[x0';Meq_M5M6_AASHTO';Mexp_M5M6'];
+Vplotmatrix=[y0';Veq_M5M6_AASHTO';Vexp_M5M6'];
+Tplotmatrix=[z0';Teq_M5M6_AASHTO';Texp_M5M6'];
+
+plot3(Mplotmatrix,Vplotmatrix,Tplotmatrix,'--ok');
+
+annotation(f4,'textarrow',[0.55 0.499999999999999],...
+    [0.683333333333333 0.690476190476191],'String',{'M5/6-1'});
+annotation(f4,'textarrow',[0.408928571428571 0.410714285714286],...
+    [0.754761904761905 0.685714285714286],'String',{'M5/6-2'});
+annotation(f4,'textarrow',[0.310714285714286 0.330357142857143],...
+    [0.678571428571429 0.621428571428571],'String',{'M5/6-3'});
+annotation(f4,'textarrow',[0.233928571428571 0.258928571428571],...
+    [0.580952380952381 0.519047619047619],'String',{'M5/6-4'});
+
+title('Mn x Vn x Tn segundo AASHTO para Vigas M5 e M6')
+
+view(135,45)
+hold off
+print('04M5M6AASHTO','-dpng');
+savefig('04M5M6AASHTO');
+
+%% Plot M7 nbr
+f5=figure;
+hold on
+grid off
+haxis=gca;
+
+haxis.XRuler.FirstCrossoverValue  = 0;
+haxis.XRuler.SecondCrossoverValue = 0;
+haxis.YRuler.FirstCrossoverValue  = 0;
+haxis.YRuler.SecondCrossoverValue = 0;
+haxis.ZRuler.FirstCrossoverValue  = 0;
+haxis.ZRuler.SecondCrossoverValue = 0;
+xlab=xlabel('Mrd/Mmax');
+ylab=ylabel('Vrd/Vmax');
+zlab=zlabel('Trd/Tmax');
+xlab.Rotation=30;
+xlab.BackgroundColor=[0.8,0.8,0.8];
+xlab.Position=[0.862127279138949,-0.028937938252358,-0.167510028759338];
+ylab.Rotation=-30;
+ylab.BackgroundColor=[0.8,0.8,0.8];
+ylab.Position=[-0.00326087988055,0.906260859249883,-0.128000014588068];
+zlab.Rotation=90;
+zlab.BackgroundColor=[0.8,0.8,0.8];
+zlab.Position=[-0.182702692680152,0.063840785580712,1.236115584023608];
+xlim([0 1.5]);
+ylim([0 1.5]);
+zlim([0 1.5]);
+xticks(1);
+xticklabels([]);
+tx=text(0.88090688984391,-0.270176443859167,-0.103482631069632,'1');
+tx.EdgeColor='none';
+yticks(1);
+yticklabels([]);
+ty=text(-0.010865059625264,1.071165459988791,0.183664424051813,'1');
+ty.EdgeColor='none';
+zticks(1);
+zticklabels([]);
+tz=text(0.144818487196108,-0.021712452351331,1.198995708702512,'1');
+tz.EdgeColor='none';
+
+bwexp= [15.09
+        15.88
+        16.21
+        15.09];
+
+fcexp= [41.92
+        35.92
+        39.30
+        36.82];
+
+Mmaxexp=zeros(4,1);
+Vmaxexp=Mmaxexp;
+Tmaxexp=Mmaxexp;
+for i=1:4
+    [Mmaxexp(i),Vmaxexp(i),Tmaxexp(i)]=MVTmax_NBR(bwexp(i),30.81,25.72,47.63,10.13,1.43/302*365.4,1.43,12.7,fcexp(i),302.0,370.25);
+end
+
+[Mmax,Vmax,Tmax]=MVTmax_NBR(15.24,30.81,25.72,47.63,10.13,1.43/302*365.4,1.43,12.7,34.47,302.0,370.25);
+mesh(M_M7_NBR./Mmax,V_M7_NBR./Vmax,T_M7_NBR./Tmax,rest_M7_NBR,'FaceColor','flat','FaceAlpha','0.4');
+colormap (haxis,NBR);
+caxis([1 5]);
+
+%valores experimentais
+Mexp_M7=[   0.00632712
+            0.012993192
+            0.031070677
+            0.057057061 ];
+        
+Vexp_M7=[   0.006939192
+            0.014768024
+            0.036074902
+            0.066589554 ];
+
+Texp_M7=[   0.012654239
+            0.012993192
+            0.014913925
+            0.014123035 ];
+        
+x0=zeros(size(Mexp_M7,1),1);
+y0=x0;
+z0=x0;
+
+keq_M7_NBR=x0;
+leq_M7_NBR=x0;
+
+M_M7_NBR=M_M7_NBR./Mmax;
+V_M7_NBR=V_M7_NBR./Vmax;
+T_M7_NBR=T_M7_NBR./Tmax;
+
+Mexp_M7=Mexp_M7./Mmaxexp;
+Vexp_M7=Vexp_M7./Vmaxexp;
+Texp_M7=Texp_M7./Tmaxexp;
+
+Rexp_M7=(Mexp_M7.^2+Vexp_M7.^2+Texp_M7.^2).^0.5;
+Betaexp_M7=abs(asin(Mexp_M7./Rexp_M7));
+Alphaexp_M7=abs(atan(Texp_M7./Vexp_M7));
+Betaexp_M7=Betaexp_M7./pi.*180;
+Alphaexp_M7=Alphaexp_M7./pi.*180;
+
+R_M7_NBR=(M_M7_NBR.^2+V_M7_NBR.^2+T_M7_NBR.^2).^0.5;
+Beta_M7_NBR=abs(asin(M_M7_NBR./R_M7_NBR));
+Alpha_M7_NBR=abs(atan(T_M7_NBR./V_M7_NBR));
+Beta_M7_NBR=Beta_M7_NBR./pi.*180;
+Alpha_M7_NBR=Alpha_M7_NBR./pi.*180;
+
+for i=1:size(Mexp_M7,1)
+    [~, keq_M7_NBR(i)] = min(abs(Alpha_M7_NBR(:,1)-Alphaexp_M7(i)));
+    [~, leq_M7_NBR(i)] = min(abs(Beta_M7_NBR(keq_M7_NBR(i),:)-Betaexp_M7(i)));
+end
+
+idxeq_M7_NBR=sub2ind([ndivM+1,ndivTV+1],keq_M7_NBR,leq_M7_NBR);
+
+Meq_M7_NBR=M_M7_NBR(idxeq_M7_NBR);
+Veq_M7_NBR=V_M7_NBR(idxeq_M7_NBR);
+Teq_M7_NBR=T_M7_NBR(idxeq_M7_NBR);
+
+Mplotmatrix=[x0';Meq_M7_NBR';Mexp_M7'];
+Vplotmatrix=[y0';Veq_M7_NBR';Vexp_M7'];
+Tplotmatrix=[z0';Teq_M7_NBR';Texp_M7'];
+
+plot3(Mplotmatrix,Vplotmatrix,Tplotmatrix,'--ok');
+
+annotation(f5,'textarrow',[0.585714285714286 0.516071428571428],...
+    [0.669047619047619 0.692857142857144],'String',{'M7-1'});
+annotation(f5,'textarrow',[0.423214285714286 0.467857142857143],...
+    [0.744238095238095 0.697619047619048],'String',{'M7-2'});
+annotation(f5,'textarrow',[0.355357142857143 0.416071428571428],...
+    [0.694238095238095 0.647619047619048],'String',{'M7-3'});
+annotation(f5,'textarrow',[0.282142857142857 0.341071428571429],...
+    [0.601380952380952 0.592857142857143],'String',{'M7-4'});
+
+title('Mrd x Vrd x Trd segundo NBR para Viga M7')
+
+view(135,45)
+hold off
+print('05M7NBR','-dpng');
+savefig('05M7NBR');
+
+%% Plot M7 aashto
+f6=figure;
+hold on
+grid off
+haxis=gca;
+
+haxis.XRuler.FirstCrossoverValue  = 0;
+haxis.XRuler.SecondCrossoverValue = 0;
+haxis.YRuler.FirstCrossoverValue  = 0;
+haxis.YRuler.SecondCrossoverValue = 0;
+haxis.ZRuler.FirstCrossoverValue  = 0;
+haxis.ZRuler.SecondCrossoverValue = 0;
+xlab=xlabel('Mn/Mmax');
+ylab=ylabel('Vn/Vmax');
+zlab=zlabel('Tn/Tmax');
+xlab.Rotation=30;
+xlab.BackgroundColor=[0.8,0.8,0.8];
+xlab.Position=[0.862127279138949,-0.028937938252358,-0.167510028759338];
+ylab.Rotation=-30;
+ylab.BackgroundColor=[0.8,0.8,0.8];
+ylab.Position=[-0.00326087988055,0.906260859249883,-0.128000014588068];
+zlab.Rotation=90;
+zlab.BackgroundColor=[0.8,0.8,0.8];
+zlab.Position=[-0.182702692680152,0.063840785580712,1.236115584023608];
+xlim([0 1.5]);
+ylim([0 1.5]);
+zlim([0 1.5]);
+xticks(1);
+xticklabels([]);
+tx=text(0.88090688984391,-0.270176443859167,-0.103482631069632,'1');
+tx.EdgeColor='none';
+yticks(1);
+yticklabels([]);
+ty=text(-0.010865059625264,1.071165459988791,0.183664424051813,'1');
+ty.EdgeColor='none';
+zticks(1);
+zticklabels([]);
+tz=text(0.144818487196108,-0.021712452351331,1.198995708702512,'1');
+tz.EdgeColor='none';
+
+bwexp= [15.09
+        15.88
+        16.21
+        15.09];
+
+fcexp= [41.92
+        35.92
+        39.30
+        36.82];
+    
+Mmaxexp=zeros(4,1);
+Vmaxexp=Mmaxexp;
+Tmaxexp=Mmaxexp;
+for i=1:4
+    [Mmaxexp(i),Vmaxexp(i),Tmaxexp(i)]=MVTmax_AASHTO(bwexp(i),30.81,25.72,30.16,10.13,1.43/302*365.4,1.43,12.7,fcexp(i),302.0,370.25,19);
+end
+
+[Mmax,Vmax,Tmax]=MVTmax_AASHTO(15.24,30.81,25.72,30.16,10.13,1.43/302*365.4,1.43,12.7,34.47,302.0,370.25,19);
+mesh(M_M7_AASHTO./Mmax,V_M7_AASHTO./Vmax,T_M7_AASHTO./Tmax,rest_M7_AASHTO,'FaceColor','flat','FaceAlpha','0.4');
+colormap (haxis,AASHTO);
+caxis([1 4]);
+
+%valores experimentais
+Mexp_M7=[   0.00632712
+            0.012993192
+            0.031070677
+            0.057057061 ];
+        
+Vexp_M7=[   0.006939192
+            0.014768024
+            0.036074902
+            0.066589554 ];
+
+Texp_M7=[   0.012654239
+            0.012993192
+            0.014913925
+            0.014123035 ];
+
+x0=zeros(size(Mexp_M7,1),1);
+y0=x0;
+z0=x0;
+
+keq_M7_AASHTO=x0;
+leq_M7_AASHTO=x0;
+
+M_M7_AASHTO=M_M7_AASHTO./Mmax;
+V_M7_AASHTO=V_M7_AASHTO./Vmax;
+T_M7_AASHTO=T_M7_AASHTO./Tmax;
+
+Mexp_M7=Mexp_M7./Mmaxexp;
+Vexp_M7=Vexp_M7./Vmaxexp;
+Texp_M7=Texp_M7./Tmaxexp;
+
+Rexp_M7=(Mexp_M7.^2+Vexp_M7.^2+Texp_M7.^2).^0.5;
+Betaexp_M7=abs(asin(Mexp_M7./Rexp_M7));
+Alphaexp_M7=abs(atan(Texp_M7./Vexp_M7));
+Betaexp_M7=Betaexp_M7./pi.*180;
+Alphaexp_M7=Alphaexp_M7./pi.*180;
+
+R_M7_AASHTO=(M_M7_AASHTO.^2+V_M7_AASHTO.^2+T_M7_AASHTO.^2).^0.5;
+Beta_M7_AASHTO=abs(asin(M_M7_AASHTO./R_M7_AASHTO));
+Alpha_M7_AASHTO=abs(atan(T_M7_AASHTO./V_M7_AASHTO));
+Beta_M7_AASHTO=Beta_M7_AASHTO./pi.*180;
+Alpha_M7_AASHTO=Alpha_M7_AASHTO./pi.*180;
+
+for i=1:size(Mexp_M7,1)
+    [~, keq_M7_AASHTO(i)] = min(abs(Alpha_M7_AASHTO(:,1)-Alphaexp_M7(i)));
+    [~, leq_M7_AASHTO(i)] = min(abs(Beta_M7_AASHTO(keq_M7_AASHTO(i),:)-Betaexp_M7(i)));
+end
+
+idxeq_M7_AASHTO=sub2ind([ndivM+1,ndivTV+1],keq_M7_AASHTO,leq_M7_AASHTO);
+
+Meq_M7_AASHTO=M_M7_AASHTO(idxeq_M7_AASHTO);
+Veq_M7_AASHTO=V_M7_AASHTO(idxeq_M7_AASHTO);
+Teq_M7_AASHTO=T_M7_AASHTO(idxeq_M7_AASHTO);
+
+Mplotmatrix=[x0';Meq_M7_AASHTO';Mexp_M7'];
+Vplotmatrix=[y0';Veq_M7_AASHTO';Vexp_M7'];
+Tplotmatrix=[z0';Teq_M7_AASHTO';Texp_M7'];
+
+plot3(Mplotmatrix,Vplotmatrix,Tplotmatrix,'--ok');
+
+annotation(f6,'textarrow',[0.585714285714286 0.516071428571428],...
+    [0.669047619047619 0.692857142857144],'String',{'M7-1'});
+annotation(f6,'textarrow',[0.423214285714286 0.467857142857143],...
+    [0.744238095238095 0.697619047619048],'String',{'M7-2'});
+annotation(f6,'textarrow',[0.355357142857143 0.416071428571428],...
+    [0.694238095238095 0.647619047619048],'String',{'M7-3'});
+annotation(f6,'textarrow',[0.282142857142857 0.341071428571429],...
+    [0.601380952380952 0.592857142857143],'String',{'M7-4'});
+
+title('Mn x Vn x Tn segundo AASHTO para Viga M7')
+
+view(135,45)
+hold off
+print('06M7AASHTO','-dpng');
+savefig('06M7AASHTO');
