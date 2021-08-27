@@ -1,0 +1,141 @@
+function [Rsol,Vsol,Tsol,thetasol,defssol,Msol,indrestri]=OtimR_AASHTO(bw,h,d,c2,...
+    Asinf,Assup,Asw,s,alpharaio,betaraio,fc,fy,fyw,dagregmax)
+%Calculo do cortante, fletor e torcor resistentes para vigas retangulares
+%Concreto armado via AASHTO LRFD 2014 com otimizacao
+%Trelica + MCFT p/ o corte e p/ a torcao
+%Seção plana para flexão, além da interação entre esses
+
+%Referencias: AASHTO LRFD 2014 e Collins/Mitchell
+%alpharaio (angulo da proporção entre V e T) em °
+%betaraio (angulo da proporção entre M e VT) em º
+%c2 (distância do eixo do estribo à face) em mm
+%dagregmax (diâmetro máximo de agregado graúdo) em mm
+%Asinf, Assup e Asw em cm2
+%bw, h, d e s em cm
+%fc, fy e fyw em MPa
+%Serao utilizados valores "nominais" de resistencia
+%Serao utilizados valores unitários para os coeficientes de segurança
+%Esses valores devem ser coerentes com os preconizados nos ensaios
+%Internamente todas as unidades são trasnformadas para MN e m
+
+%% Transformação de unidades
+alpharaio=alpharaio/180*pi; %transforma alpharaio) em radianos
+betaraio=betaraio/180*pi; %transforma betaraio em radianos
+c2=c2/1000; %distancia da face ao eixo do estribo em m
+dagregmax=dagregmax/1000; %diametro maximo do agregado graudo em m
+Asinf=Asinf/10000;
+Assup=Assup/10000;
+Asw=Asw/10000;
+bw=bw/100;
+h=h/100;
+d=d/100;
+s=s/100;
+alpha=90; %angulo do estribo, geralmente 90 graus ou pi/2 radianos
+alpha=alpha*pi/180; %#ok<NASGU> %angulo do estribo em radianos
+
+%% Propriedades mecânicas
+
+fc=fc; %#ok<ASGSL>
+
+%aco
+Es=210e+3; %modulo elastico do aco MPa
+fyd=fy;
+fywd=fyw;
+
+
+%% Propriedades geométricas
+
+Aoh=(bw-2*c2)*(h-2*c2);
+ph=2*(bw-2*c2) + 2*(h-2*c2);
+
+Ao=0.85*Aoh;
+po=0.9*ph;
+
+z=max(0.9*d,0.72*h); %braco de alavanca conforme AASHTO em m
+
+if fc<60
+    dagreg=dagregmax; %diametro do agregado afetando aggregate interlock m
+else
+    if fc <70 %necessidade de corrigir o aggregate interlock, pois é possível que o agregado quebre antes do concreto
+        dagreg=(70-fc)/10*dagregmax;
+    else
+        dagreg=0;
+    end    
+end
+
+Aswmin=0.083*bw*s/fyw*fc^0.5;
+if Asw>Aswmin
+    sx=0.3; %espacamento das fissuras diagonais m para vigas com estribos m
+else
+    sx=z; %espacamento das fissuras diagonais m para vigas sem estribos m
+end
+
+sxe=sx*0.035/(dagreg+0.016); %espacamento efetivo das fissuras m
+sxe=max([min(sxe,2),0.30,0.85*sx]); %limites para espacamento efetivo das fissuras m
+
+%Valores maximos para fatores de escala
+Vmax=0.25*fc*bw*z;
+Tmax=Vmax*2*Ao/po;
+Mmax=z*fyd*Asinf;
+
+%% Corte, fletor e torção simultaneos
+
+%FUNCAO OBJETIVO
+    function y=Raio(x)
+        %funcao a ser "minimizada"
+        R=x(1); defsusa=x(2); %#ok<NASGU> %raio, def longit usada e ângulo das bielas
+        y=-R;
+    end
+
+A=[];b=[];Aeq=[];beq=[]; %restricoes lineares
+lb=[0,-4e-4]; up=[+inf,6e-3]; %restricoes nas variaveis
+Ri=0.01; defsusai=0.01;
+x0=[Ri, defsusai]; %ponto inicial de otimizacao
+
+%FUNCAO DAS RESTRICOES NAO LINEARES
+    function [c,ceq]=Nlc(x)
+        %funcao das restricoes nao lineares
+        R=x(1); defsusa=x(2);
+        VSd=R*cos(betaraio)*cos(alpharaio)*Vmax; %cortante solicitante escalado
+        TSd=R*cos(betaraio)*sin(alpharaio)*Tmax; %torcor solicitante escalado
+        MSd=R*sin(betaraio)*Mmax; %momento solicitante escalado
+        theta=(29+3500*defsusa)/180*pi; %angulo bielas radianos
+        
+        VSdeq=(VSd^2+(TSd*po/2/Ao)^2)^0.5; %corte solicitante equivalente
+        
+        defs=(VSdeq+MSd/z)/Es/Asinf; %deformacao longitudinal aco
+        c(1)=defs-defsusa; %defs<defsusa
+        
+        beta=4.8/(1+750*defsusa)*1.3/(1+sxe); %parametro de engrenamento de agregado
+                
+        Vc=0.083*beta*bw*z*fc^0.5; %contrib do concreto no tirante MN
+               
+        c(2)=VSdeq-0.25*fc*bw*z; %esmagamento da biela
+        
+        Vsv=max([(VSd-Vc),0])/fywd/z/cot(theta); %parte do estribo solicitada pelo corte exclusivamente MN      
+        c(3)=Vsv + TSd/fywd/Ao/cot(theta) - Asw/s; %tirante tracionado
+        
+        FRdinf=Asinf*fyd; %forca resistente de tracao longitudinal em MN
+        c(4)= MSd/z + ((VSd-0.5*Vsv)^2+(0.45*TSd*po/2/Ao)^2)^0.5*cot(theta) - FRdinf; %banzo longitudinal inferior
+        
+        FRdsup=Assup*fyd; %forca resistente de tracao longitudinal em MN
+        c(5)= -MSd/z + ((VSd-0.5*Vsv)^2+...
+            (0.45*TSd*po/2/Ao)^2)^0.5*cot(theta) - FRdsup; %banzo longitudinal superior
+        
+        ceq=[]; %restricoes nao lineares de igualdade
+    end
+
+%OPCOES
+op=optimoptions('fmincon','Algorithm','sqp','Display','off','MaxFunctionEvaluations',1000);
+%CHAMADA DO OTIMIZADOR
+xsol=fmincon(@Raio,x0,A,b,Aeq,beq,lb,up,@Nlc,op); %em MN e radianos
+[rest,~]=Nlc(xsol);
+restri=rest([2:5]); %#ok<NBRAK>
+[~,indrestri]=max(restri);
+Rsol=xsol(1); %em MN
+defssol=xsol(2); %deformacao longitudinal do aco
+thetasol=(29+3500*defssol); %theta em graus
+Vsol=Rsol*cos(betaraio)*cos(alpharaio)*Vmax; %corte solicitante em MN
+Tsol=Rsol*cos(betaraio)*sin(alpharaio)*Tmax; %torcor solicitante em MNm
+Msol=Rsol*sin(betaraio)*Mmax; %momento solicitante em MNm
+end
